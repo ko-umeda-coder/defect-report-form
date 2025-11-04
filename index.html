@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>不良品申請フォーム</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body {
+    font-family: "Noto Sans JP", sans-serif;
+    background-color: #fafafa;
+    margin: 0;
+    padding: 16px;
+  }
+  h2 {
+    text-align: center;
+    color: #333;
+  }
+  form {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    max-width: 520px;
+    margin: 0 auto;
+  }
+  label {
+    display: block;
+    margin-top: 12px;
+    font-weight: bold;
+  }
+  input, textarea, select, button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 4px;
+    box-sizing: border-box;
+    font-size: 14px;
+  }
+  textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+  .file-group {
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px dashed #ccc;
+    border-radius: 8px;
+    background: #f9f9f9;
+  }
+  .file-label {
+    font-weight: bold;
+  }
+  .file-name {
+    font-size: 13px;
+    color: #555;
+    margin-top: 4px;
+  }
+  button {
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    margin-top: 20px;
+    font-size: 16px;
+    font-weight: bold;
+  }
+  button:hover {
+    background-color: #1976D2;
+  }
+  #msg {
+    margin-top: 20px;
+    text-align: center;
+    font-weight: bold;
+  }
+</style>
+</head>
+<body>
+  <h2>不良品申請フォーム</h2>
+  <form id="defectForm">
+    <label>申請日※必須<input type="date" name="date" required></label>
+    <label>申請者※必須<input type="text" name="name" required></label>
+    <label>所属※必須<input type="text" name="department" required></label>
+    <label>管理番号※必須<input type="text" name="controlNo" required></label>
+    <label>取引先名※必須<input type="text" name="vendor" required></label>
+    <label>挙式日※必須<input type="date" name="weddingDate"></label>
+    <label>不良の状況※必須（花材・色・品種・輪数など）<textarea name="defectDetail" required></textarea></label>
+    <label>申し送り事項<textarea name="note"></textarea></label>
+
+    <div class="file-group">
+      <div class="file-label">写真1</div>
+      <input type="file" id="image1" accept="image/*">
+      <div class="file-name" id="fileName1">未選択</div>
+    </div>
+    <div class="file-group">
+      <div class="file-label">写真2</div>
+      <input type="file" id="image2" accept="image/*">
+      <div class="file-name" id="fileName2">未選択</div>
+    </div>
+    <div class="file-group">
+      <div class="file-label">写真3</div>
+      <input type="file" id="image3" accept="image/*">
+      <div class="file-name" id="fileName3">未選択</div>
+    </div>
+
+    <button type="submit">送信</button>
+  </form>
+
+  <p id="msg"></p>
+
+<script>
+// === あなたのGAS WebアプリURL ===
+const scriptURL = 'YOUR_GAS_WEBAPP_URL';
+
+// ==== ファイル名表示 ====
+for (let i = 1; i <= 3; i++) {
+  document.getElementById(`image${i}`).addEventListener('change', function() {
+    const fileName = this.files.length > 0 ? this.files[0].name : '未選択';
+    document.getElementById(`fileName${i}`).textContent = fileName;
+  });
+}
+
+// ==== フォーム送信 ====
+document.getElementById('defectForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const images = [];
+
+  // 3つのファイルをチェック
+  for (let i = 1; i <= 3; i++) {
+    const fileInput = document.getElementById(`image${i}`);
+    if (fileInput.files.length > 0) {
+      const base64 = await toBase64(fileInput.files[0]);
+      images.push(base64);
+    }
+  }
+
+  const data = {
+    date: form.date.value,
+    name: form.name.value,
+    department: form.department.value,
+    controlNo: form.controlNo.value,
+    vendor: form.vendor.value,
+    weddingDate: form.weddingDate.value,
+    defectDetail: form.defectDetail.value,
+    note: form.note.value,
+    images: images
+  };
+
+  const res = await fetch(scriptURL, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+
+  const result = await res.json();
+  document.getElementById('msg').innerText =
+    result.status === 'success'
+      ? '申請を送信しました。'
+      : 'エラーが発生しました: ' + result.message;
+  form.reset();
+
+  // ファイル名表示をリセット
+  for (let i = 1; i <= 3; i++) {
+    document.getElementById(`fileName${i}`).textContent = '未選択';
+  }
+});
+
+// ==== Base64変換 ====
+function toBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+</script>
+</body>
+</html>
