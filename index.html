@@ -1,80 +1,80 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>不良品申請フォーム</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-  body {
-    font-family: "Noto Sans JP", sans-serif;
-    background-color: #fafafa;
-    margin: 0;
-    padding: 16px;
-  }
-  h2 {
-    text-align: center;
-    color: #333;
-  }
-  form {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    max-width: 520px;
-    margin: 0 auto;
-  }
-  label {
-    display: block;
-    margin-top: 12px;
-    font-weight: bold;
-  }
-  input, textarea, select, button {
-    width: 100%;
-    padding: 10px;
-    margin-top: 4px;
-    box-sizing: border-box;
-    font-size: 14px;
-  }
-  textarea {
-    resize: vertical;
-    min-height: 80px;
-  }
-  .file-group {
-    margin-top: 10px;
-    padding: 10px;
-    border: 1px dashed #ccc;
-    border-radius: 8px;
-    background: #f9f9f9;
-  }
-  .file-label {
-    font-weight: bold;
-  }
-  .file-name {
-    font-size: 13px;
-    color: #555;
-    margin-top: 4px;
-  }
-  button {
-    background-color: #2196F3;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    margin-top: 20px;
-    font-size: 16px;
-    font-weight: bold;
-  }
-  button:hover {
-    background-color: #1976D2;
-  }
-  #msg {
-    margin-top: 20px;
-    text-align: center;
-    font-weight: bold;
-  }
-</style>
+  <meta charset="UTF-8">
+  <title>代替え花申請フォーム</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: "Noto Sans JP", sans-serif;
+      background-color: #fafafa;
+      margin: 0;
+      padding: 16px;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    form {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      max-width: 520px;
+      margin: 0 auto;
+    }
+    label {
+      display: block;
+      margin-top: 12px;
+      font-weight: bold;
+    }
+    input, textarea, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 4px;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    .file-group {
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px dashed #ccc;
+      border-radius: 8px;
+      background: #f9f9f9;
+    }
+    .file-label {
+      font-weight: bold;
+    }
+    .file-name {
+      font-size: 13px;
+      color: #555;
+      margin-top: 4px;
+    }
+    button {
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      margin-top: 20px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    button:hover {
+      background-color: #1976D2;
+    }
+    #msg {
+      margin-top: 20px;
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
-  <h2>不良品申請フォーム</h2>
+  <h2>代替え花申請フォーム</h2>
   <form id="defectForm">
     <label>申請日※必須<input type="date" name="date" required></label>
     <label>申請者※必須<input type="text" name="name" required></label>
@@ -108,7 +108,7 @@
 
 <script>
 // === あなたのGAS WebアプリURL ===
-const scriptURL = 'https://script.google.com/a/macros/halmek.co.jp/s/AKfycbyb40e9-y8jGH5U8Nr2P4gXS4Tr9fXOtIMpkDP7FQLgZIUKQikkpOH6VngT4ET5qZDI/exec';
+const scriptURL = 'https://script.google.com/macros/s/AKfycbyb40e9-y8jGH5U8Nr2P4gXS4Tr9fXOtIMpkDP7FQLgZIUKQikkpOH6VngT4ET5qZDI/exec';
 
 // ==== ファイル名表示 ====
 for (let i = 1; i <= 3; i++) {
@@ -145,16 +145,26 @@ document.getElementById('defectForm').addEventListener('submit', async (e) => {
     images: images
   };
 
-  const res = await fetch(scriptURL, {
-    method: 'POST',
-    body: JSON.stringify(data)
-  });
+  try {
+    const res = await fetch(scriptURL, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
 
-  const result = await res.json();
-  document.getElementById('msg').innerText =
-    result.status === 'success'
-      ? '申請を送信しました。'
-      : 'エラーが発生しました: ' + result.message;
+    if (!res.ok) {
+      throw new Error('Failed to send data: ' + res.statusText);
+    }
+
+    const result = await res.json();
+    document.getElementById('msg').innerText =
+      result.status === 'success'
+        ? '申請を送信しました。'
+        : 'エラーが発生しました: ' + result.message;
+  } catch (error) {
+    console.error('Error:', error);
+    document.getElementById('msg').innerText = '送信に失敗しました: ' + error.message;
+  }
+
   form.reset();
 
   // ファイル名表示をリセット
