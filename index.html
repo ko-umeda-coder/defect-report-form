@@ -2,155 +2,95 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>代替花申請フォーム</title>
+<title>代替花申請メール作成</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
-<script>
-  (function() {
-    // 🔹 あなたのEmailJS公開キー
-    emailjs.init("gjzoajs");
-  })();
-</script>
 <style>
 body {
   font-family: "Noto Sans JP", sans-serif;
-  background: #f9f9f9;
-  padding: 20px;
+  background: #f7f7f7;
+  text-align: center;
+  padding: 40px;
 }
-form {
+.container {
   background: white;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  max-width: 500px;
+  max-width: 480px;
   margin: 0 auto;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
-label { display: block; margin-top: 10px; font-weight: bold; }
-input, textarea, button {
+h2 {
+  color: #333;
+  margin-bottom: 20px;
+}
+label {
+  display: block;
+  text-align: left;
+  margin-top: 15px;
+  font-weight: bold;
+}
+input, textarea {
   width: 100%;
   padding: 8px;
   margin-top: 4px;
+  box-sizing: border-box;
   font-size: 14px;
 }
-textarea { resize: vertical; min-height: 80px; }
 button {
-  background: #2196F3; color: white; border: none; border-radius: 6px;
-  margin-top: 20px; padding: 10px; font-weight: bold;
+  margin-top: 20px;
+  padding: 12px 16px;
+  background: #2196F3;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
 }
-button:hover { background: #1976D2; }
-.file-group {
-  margin-top: 10px; border: 1px dashed #ccc; border-radius: 8px;
-  padding: 10px; text-align: center; background: #fafafa;
+button:hover {
+  background: #1976D2;
 }
-.file-name { font-size: 13px; color: #333; margin-top: 5px; }
-.hidden { display: none; }
-#msg { text-align: center; margin-top: 15px; font-weight: bold; }
+.note {
+  font-size: 13px;
+  color: #666;
+  margin-top: 10px;
+}
 </style>
 </head>
 <body>
-  <h2>代替花申請フォーム</h2>
-  <form id="form">
-    <label>申請者名</label>
-    <input type="text" id="name" required>
-
-    <label>受注番号</label>
-    <input type="text" id="orderNo" required>
+  <div class="container">
+    <h2>代替花申請メール作成</h2>
+    <p>以下を入力して「メール作成」ボタンを押してください。</p>
 
     <label>取引先名</label>
-    <input type="text" id="vendor" required>
+    <input type="text" id="vendor" placeholder="例：株式会社〇〇">
 
-    <label>不良の状況</label>
-    <textarea id="defectDetail" required></textarea>
+    <label>受注番号</label>
+    <input type="text" id="orderNo" placeholder="例：12345">
+
+    <label>不良の状況（花材・品種・数量など）</label>
+    <textarea id="defect" placeholder="例：バラ（赤）5本中2本が萎れていた"></textarea>
 
     <label>申し送り事項</label>
-    <textarea id="note"></textarea>
+    <textarea id="note" placeholder="例：可能であれば同品種の代替希望"></textarea>
 
-    <label>画像添付（最大5枚）</label>
-    <div id="fileContainer">
-      <div class="file-group" id="fileGroup1">
-        <input type="file" id="file1" accept="image/*">
-        <div class="file-name" id="fileName1">未選択</div>
-      </div>
-      <div class="file-group hidden" id="fileGroup2">
-        <input type="file" id="file2" accept="image/*">
-        <div class="file-name" id="fileName2">未選択</div>
-      </div>
-      <div class="file-group hidden" id="fileGroup3">
-        <input type="file" id="file3" accept="image/*">
-        <div class="file-name" id="fileName3">未選択</div>
-      </div>
-      <div class="file-group hidden" id="fileGroup4">
-        <input type="file" id="file4" accept="image/*">
-        <div class="file-name" id="fileName4">未選択</div>
-      </div>
-      <div class="file-group hidden" id="fileGroup5">
-        <input type="file" id="file5" accept="image/*">
-        <div class="file-name" id="fileName5">未選択</div>
-      </div>
-    </div>
-
-    <button type="submit">送信</button>
-    <p id="msg"></p>
-  </form>
+    <button id="createMail">📩 メール作成</button>
+    <p class="note">※クリックするとGmailが開きます。写真を添付して送信してください。</p>
+  </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  // ファイル選択の連動表示
-  for (let i = 1; i <= 5; i++) {
-    const input = document.getElementById(`file${i}`);
-    const label = document.getElementById(`fileName${i}`);
-    const next = document.getElementById(`fileGroup${i + 1}`);
-    input.addEventListener('change', () => {
-      if (input.files.length > 0) {
-        label.textContent = input.files[0].name;
-        if (next) next.classList.remove('hidden');
-      } else {
-        label.textContent = '未選択';
-        for (let j = i + 1; j <= 5; j++) {
-          document.getElementById(`fileGroup${j}`).classList.add('hidden');
-          document.getElementById(`fileName${j}`).textContent = '未選択';
-          document.getElementById(`file${j}`).value = '';
-        }
-      }
-    });
-  }
+document.getElementById("createMail").addEventListener("click", () => {
+  const vendor = encodeURIComponent(document.getElementById("vendor").value);
+  const orderNo = encodeURIComponent(document.getElementById("orderNo").value);
+  const defect = encodeURIComponent(document.getElementById("defect").value);
+  const note = encodeURIComponent(document.getElementById("note").value);
 
-  document.getElementById("form").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const msg = document.getElementById("msg");
-    msg.textContent = "送信中...";
+  // 宛先と件名・本文テンプレート
+  const mailto = `mailto:ko-umeda@halmek.co.jp
+?subject=【代替花申請】${vendor}／受注番号${orderNo}
+&body=以下の内容で申請します。%0D%0A%0D%0A■取引先名：${vendor}%0D%0A■受注番号：${orderNo}%0D%0A■不良の状況：${defect}%0D%0A■申し送り事項：${note}%0D%0A%0D%0A写真を添付の上、このまま送信してください。`;
 
-    const formData = {
-      name: document.getElementById("name").value,
-      orderNo: document.getElementById("orderNo").value,
-      vendor: document.getElementById("vendor").value,
-      defectDetail: document.getElementById("defectDetail").value,
-      note: document.getElementById("note").value
-    };
-
-    const attachments = [];
-    for (let i = 1; i <= 5; i++) {
-      const f = document.getElementById(`file${i}`).files[0];
-      if (f) attachments.push(f);
-    }
-
-    try {
-      await emailjs.send("service_rnifgpa", "template_gjzoajs", formData, {
-        publicKey: "gjzoajs",
-        attachments: attachments
-      });
-      msg.textContent = "送信が完了しました！";
-      e.target.reset();
-      // ファイル欄リセット
-      for (let i = 2; i <= 5; i++) {
-        document.getElementById(`fileGroup${i}`).classList.add('hidden');
-        document.getElementById(`fileName${i}`).textContent = '未選択';
-      }
-    } catch (error) {
-      console.error(error);
-      msg.textContent = "送信に失敗しました。";
-    }
-  });
+  window.location.href = mailto;
 });
 </script>
 </body>
