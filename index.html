@@ -87,4 +87,43 @@ button:hover { background: #1976D2; }
         <input type="file" name="file4" id="file4" accept="image/*">
         <div class="file-name" id="fileName4">未選択</div>
       </div>
-      <div clas
+      <div class="file-group hidden" id="fileGroup5">
+        <span>画像5を選択</span><br>
+        <input type="file" name="file5" id="file5" accept="image/*">
+        <div class="file-name" id="fileName5">未選択</div>
+      </div>
+    </div>
+
+    <button type="submit" id="submitBtn">送信</button>
+
+    <input type="hidden" name="_subject" value="【代替花申請】{{申請者名}}-受注番号{{受注番号}}">
+    <input type="hidden" name="_next" value="https://yourdomain.com/thankyou.html">
+  </form>
+
+<script>
+// ✅ DOMが完全に読み込まれてからスクリプトを実行
+document.addEventListener("DOMContentLoaded", () => {
+  for (let i = 1; i <= 5; i++) {
+    const input = document.getElementById(`file${i}`);
+    const nameLabel = document.getElementById(`fileName${i}`);
+    const nextGroup = document.getElementById(`fileGroup${i + 1}`);
+
+    input.addEventListener('change', function() {
+      if (this.files.length > 0) {
+        nameLabel.textContent = this.files[0].name;
+        if (nextGroup) nextGroup.classList.remove('hidden'); // 次のアップボタンを出す
+      } else {
+        nameLabel.textContent = '未選択';
+        // 以降のグループを非表示に戻す
+        for (let j = i + 1; j <= 5; j++) {
+          document.getElementById(`fileGroup${j}`).classList.add('hidden');
+          document.getElementById(`fileName${j}`).textContent = '未選択';
+          document.getElementById(`file${j}`).value = '';
+        }
+      }
+    });
+  }
+});
+</script>
+</body>
+</html>
