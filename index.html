@@ -2,115 +2,64 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>画像アップロードフォーム</title>
+<title>代替花申請フォーム</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body {
   font-family: "Noto Sans JP", sans-serif;
-  background: #fafafa;
+  background: #f9f9f9;
   padding: 20px;
 }
 form {
   background: white;
   padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  max-width: 480px;
+  margin: 0 auto;
 }
-label { display: block; margin-top: 12px; font-weight: bold; }
-input[type="file"], input[type="text"], button {
-  width: 100%; padding: 8px; margin-top: 4px; font-size: 14px;
+label { display: block; margin-top: 10px; font-weight: bold; }
+input, textarea, button {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+  font-size: 14px;
 }
+textarea { resize: vertical; min-height: 80px; }
 button {
-  background: #2196F3; color: white; border: none;
-  border-radius: 6px; padding: 10px; margin-top: 16px;
+  background: #2196F3; color: white; border: none; border-radius: 6px;
+  margin-top: 20px; padding: 10px; font-weight: bold;
 }
 button:hover { background: #1976D2; }
-#progress-container {
-  margin-top: 16px; background: #eee; border-radius: 6px; height: 20px; width: 100%;
-  overflow: hidden;
-}
-#progress-bar {
-  height: 100%; width: 0%; background: #4caf50; text-align: center;
-  color: white; font-size: 12px; transition: width 0.2s ease;
-}
-#msg {
-  margin-top: 16px; font-weight: bold; text-align: center;
-}
 </style>
 </head>
 <body>
-  <h2>画像アップロードフォーム</h2>
-  <form id="uploadForm">
-    <label>受注番号（Googleフォームで入力した番号）</label>
-    <input type="text" name="orderNo" required>
+  <h2>代替花申請フォーム</h2>
+  <form action="https://formspree.io/f/xblpnrlo" method="POST" enctype="multipart/form-data">
+    <label>申請者名</label>
+    <input type="text" name="申請者名" required>
 
-    <label>画像を選択（最大5枚）</label>
-    <input type="file" name="file1" accept="image/*">
-    <input type="file" name="file2" accept="image/*">
-    <input type="file" name="file3" accept="image/*">
-    <input type="file" name="file4" accept="image/*">
-    <input type="file" name="file5" accept="image/*">
+    <label>受注番号</label>
+    <input type="text" name="受注番号" required>
 
-    <button type="submit">アップロード</button>
+    <label>取引先名</label>
+    <input type="text" name="取引先名" required>
 
-    <div id="progress-container">
-      <div id="progress-bar">0%</div>
-    </div>
+    <label>不良の状況</label>
+    <textarea name="不良の状況" required></textarea>
+
+    <label>申し送り事項</label>
+    <textarea name="申し送り事項"></textarea>
+
+    <label>画像を添付（最大5枚）</label>
+    <input type="file" name="files" multiple accept="image/*">
+
+    <button type="submit">送信</button>
+
+    <!-- 件名を指定 -->
+    <input type="hidden" name="_subject" value="【代替花申請】{{申請者名}}-受注番号{{受注番号}}">
+    <!-- 成功メッセージ -->
+    <input type="hidden" name="_next" value="https://yourdomain.com/thankyou.html">
   </form>
-
-  <p id="msg"></p>
-
-  <script>
-  const SCRIPT_URL = 'https://script.google.com/a/macros/halmek.co.jp/s/AKfycbz-60jUGlYEhpUJsuV3SrTF9JnVn26Gd-RBUTtPhnhBPBz7zZ5ub4dyoRmCKHxz_X3V/exec'; // ← GAS デプロイURLを貼る
-
-  document.getElementById('uploadForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-
-    const form = e.target;
-    const formData = new FormData(form);
-    const xhr = new XMLHttpRequest();
-
-    const progressBar = document.getElementById('progress-bar');
-    const msg = document.getElementById('msg');
-    msg.textContent = '';
-    progressBar.style.width = '0%';
-    progressBar.textContent = '0%';
-
-    xhr.upload.onprogress = function(event) {
-      if (event.lengthComputable) {
-        const percent = Math.round((event.loaded / event.total) * 100);
-        progressBar.style.width = percent + '%';
-        progressBar.textContent = percent + '%';
-      }
-    };
-
-    xhr.onload = function() {
-      if (xhr.status === 200) {
-        const result = JSON.parse(xhr.responseText);
-        if (result.status === 'success') {
-          progressBar.style.width = '100%';
-          progressBar.textContent = '100%';
-          msg.style.color = 'green';
-          msg.textContent = '✅ アップロードが完了しました。';
-          form.reset();
-        } else {
-          msg.style.color = 'red';
-          msg.textContent = '⚠ エラー: ' + result.message;
-        }
-      } else {
-        msg.style.color = 'red';
-        msg.textContent = '⚠ 通信エラーが発生しました。';
-      }
-    };
-
-    xhr.onerror = function() {
-      msg.style.color = 'red';
-      msg.textContent = '⚠ ネットワークエラーが発生しました。';
-    };
-
-    xhr.open('POST', SCRIPT_URL);
-    xhr.send(formData);
-  });
-  </script>
 </body>
 </html>
