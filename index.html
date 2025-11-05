@@ -60,22 +60,22 @@ button:hover {
 <body>
   <div class="container">
     <h2>代替花申請メール作成</h2>
-    <p>以下を入力して「メール作成」ボタンを押してください。</p>
+    <p>以下を入力して「Gmailで開く」ボタンを押してください。</p>
 
     <label>取引先名</label>
-    <input type="text" id="vendor" placeholder="例：株式会社〇〇">
+    <input type="text" id="vendor" placeholder="例：株式会社〇〇" required>
 
     <label>受注番号</label>
-    <input type="text" id="orderNo" placeholder="例：12345">
+    <input type="text" id="orderNo" placeholder="例：12345" required>
 
     <label>不良の状況（花材・品種・数量など）</label>
-    <textarea id="defect" placeholder="例：バラ（赤）5本中2本が萎れていた"></textarea>
+    <textarea id="defect" placeholder="例：バラ（赤）5本中2本が萎れていた" required></textarea>
 
     <label>申し送り事項</label>
     <textarea id="note" placeholder="例：可能であれば同品種の代替希望"></textarea>
 
-    <button id="createMail">📩 メール作成</button>
-    <p class="note">※クリックするとGmailが開きます。写真を添付して送信してください。</p>
+    <button id="createMail">📩 Gmailで開く</button>
+    <p class="note">※Gmailが自動で開きます。画像を添付して送信してください。</p>
   </div>
 
 <script>
@@ -85,12 +85,18 @@ document.getElementById("createMail").addEventListener("click", () => {
   const defect = encodeURIComponent(document.getElementById("defect").value);
   const note = encodeURIComponent(document.getElementById("note").value);
 
-  // 宛先と件名・本文テンプレート
-  const mailto = `mailto:ko-umeda@halmek.co.jp
-?subject=【代替花申請】${vendor}／受注番号${orderNo}
-&body=以下の内容で申請します。%0D%0A%0D%0A■取引先名：${vendor}%0D%0A■受注番号：${orderNo}%0D%0A■不良の状況：${defect}%0D%0A■申し送り事項：${note}%0D%0A%0D%0A写真を添付の上、このまま送信してください。`;
+  // Gmail専用URL
+  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=ko-umeda@halmek.co.jp
+&su=【代替花申請】${vendor}／受注番号${orderNo}
+&body=以下の内容で申請します。%0D%0A%0D%0A
+■取引先名：${vendor}%0D%0A
+■受注番号：${orderNo}%0D%0A
+■不良の状況：${defect}%0D%0A
+■申し送り事項：${note}%0D%0A%0D%0A
+📷 写真を添付の上、このまま送信してください。`;
 
-  window.location.href = mailto;
+  // Gmailを新しいタブで開く
+  window.open(gmailUrl, "_blank");
 });
 </script>
 </body>
