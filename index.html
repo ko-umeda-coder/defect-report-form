@@ -31,6 +31,20 @@ button {
   margin-top: 20px; padding: 10px; font-weight: bold;
 }
 button:hover { background: #1976D2; }
+.file-group {
+  margin-top: 10px;
+  border: 1px dashed #ccc;
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  background: #fafafa;
+}
+.file-name {
+  font-size: 13px;
+  color: #333;
+  margin-top: 5px;
+}
+.hidden { display: none; }
 </style>
 </head>
 <body>
@@ -51,15 +65,26 @@ button:hover { background: #1976D2; }
     <label>申し送り事項</label>
     <textarea name="申し送り事項"></textarea>
 
-    <label>画像を添付（最大5枚）</label>
-    <input type="file" name="files" multiple accept="image/*">
-
-    <button type="submit">送信</button>
-
-    <!-- 件名を指定 -->
-    <input type="hidden" name="_subject" value="【代替花申請】{{申請者名}}-受注番号{{受注番号}}">
-    <!-- 成功メッセージ -->
-    <input type="hidden" name="_next" value="https://yourdomain.com/thankyou.html">
-  </form>
-</body>
-</html>
+    <label>画像添付（最大5枚）</label>
+    <div id="fileContainer">
+      <div class="file-group" id="fileGroup1">
+        <span>画像1を選択</span><br>
+        <input type="file" name="file1" id="file1" accept="image/*">
+        <div class="file-name" id="fileName1">未選択</div>
+      </div>
+      <div class="file-group hidden" id="fileGroup2">
+        <span>画像2を選択</span><br>
+        <input type="file" name="file2" id="file2" accept="image/*">
+        <div class="file-name" id="fileName2">未選択</div>
+      </div>
+      <div class="file-group hidden" id="fileGroup3">
+        <span>画像3を選択</span><br>
+        <input type="file" name="file3" id="file3" accept="image/*">
+        <div class="file-name" id="fileName3">未選択</div>
+      </div>
+      <div class="file-group hidden" id="fileGroup4">
+        <span>画像4を選択</span><br>
+        <input type="file" name="file4" id="file4" accept="image/*">
+        <div class="file-name" id="fileName4">未選択</div>
+      </div>
+      <div clas
