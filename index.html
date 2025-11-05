@@ -1,203 +1,117 @@
-/******************************************************
- * 代替花申請 管理システム - Gmail ⇄ スプレッドシート連携
- * 
- * 機能概要：
- *  ① Gmail受信 → スプシ登録（添付保存）
- *  ② ステータス変更時 → Gmailラベル更新
- *  ③ ステータス変更時 → 自動メール通知（テンプレ差し込み）
- ******************************************************/
-
-const SHEET_MAIN = "進捗一覧";
-const SHEET_MAIL = "メール設定";
-const DRIVE_FOLDER_ID = "1Hl_f7FE8cg6iRbycyfAFzb0ryXZjdvRJ";
-const MAIN_LABEL = "代替花申請";
-const SPREADSHEET_ID = '1DMH4w1eA_CxSYCVhCjJyewweuMat2xsR3LRVp1doFNY';
-
-/**
- * Gmail受信 → スプレッドシート登録
- */
-function processDefectMails() {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName(SHEET_MAIN);
-  const threads = GmailApp.search('subject:代替花申請');
-  const baseLabel = getOrCreateLabel(MAIN_LABEL);
-  const folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
-
-  Logger.log(`🔍 対象スレッド数: ${threads.length}`);
-
-  threads.forEach(thread => {
-    const messages = thread.getMessages();
-    const msg = messages[messages.length - 1];
-    const subject = msg.getSubject();
-    const body = msg.getPlainBody();
-    const from = msg.getFrom();
-    const dateObj = msg.getDate();
-    const dateStr = Utilities.formatDate(dateObj, Session.getScriptTimeZone(), 'yyyy/MM/dd HH:mm');
-    const dateForName = Utilities.formatDate(dateObj, Session.getScriptTimeZone(), 'yyMMdd');
-
-    Logger.log(`📧 処理中: ${subject} from=${from}`);
-
-    // --- 本文抽出 ---
-    const applicant = getValue(body, "■申請者名：");
-    const vendor = getValue(body, "■取引先名：");
-    const orderNo = String(getValue(body, "■受注番号：")).trim();
-    const defect = getValue(body, "■不良の状況：");
-    const note = getValue(body, "■申し送り事項：");
-
-    if (!orderNo) {
-      Logger.log(`⚠ 受注番号が見つかりません。スキップします。`);
-      return;
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>代替花申請フォーム</title>
+  <style>
+    body {
+      font-family: "Segoe UI", "Hiragino Sans", sans-serif;
+      background-color: #f8f9fa;
+      padding: 40px;
     }
-
-    // --- データ存在確認 ---
-    let data = [];
-    let orderNos = [];
-    const lastRow = sheet.getLastRow();
-    if (lastRow > 1) {
-      data = sheet.getRange(2, 1, lastRow - 1, 13).getValues();
-      orderNos = data.map(r => String(r[3]).trim());
+    h1 {
+      color: #444;
+      font-size: 1.5em;
+      text-align: center;
     }
-
-    if (orderNos.includes(orderNo)) {
-      Logger.log(`⏩ ${orderNo} は既に登録済み。スキップ`);
-      thread.addLabel(baseLabel);
-      thread.moveToArchive();
-      return;
+    form {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 30px 40px;
     }
+    label {
+      display: block;
+      margin-top: 16px;
+      font-weight: bold;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-top: 6px;
+      box-sizing: border-box;
+    }
+    textarea {
+      resize: vertical;
+      height: 80px;
+    }
+    button {
+      display: block;
+      width: 100%;
+      margin-top: 30px;
+      padding: 12px;
+      background-color: #007bff;
+      border: none;
+      color: white;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    small {
+      display: block;
+      margin-top: 8px;
+      color: #777;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
 
-    // --- 添付保存 ---
-    const attachments = msg.getAttachments({ includeInlineImages: false });
-    const fileUrls = [];
-    attachments.forEach((file, i) => {
-      const fileName = `${orderNo}_${vendor}_${dateForName}_${i + 1}`;
-      const blob = file.copyBlob().setName(fileName);
-      const saved = folder.createFile(blob);
-      fileUrls.push(saved.getUrl());
-    });
+  <h1>代替花申請フォーム</h1>
 
-    // --- 空白行を探索 ---
-    let insertRow = lastRow + 1;
-    const allValues = sheet.getDataRange().getValues();
-    for (let i = 1; i < allValues.length; i++) {
-      if (allValues[i].every(cell => cell === "")) {
-        insertRow = i + 1;
-        break;
+  <form id="defectForm">
+    <label>申請者名</label>
+    <input type="text" id="applicant" placeholder="例：梅田耕平" required />
+
+    <label>取引先名</label>
+    <input type="text" id="vendor" placeholder="例：アーカンジェル新大阪" required />
+
+    <label>受注番号</label>
+    <input type="text" id="orderNo" placeholder="例：67890" required />
+
+    <label>不良の状況</label>
+    <textarea id="defect" placeholder="例：花の色が違う、茎が折れているなど" required></textarea>
+
+    <label>申し送り事項</label>
+    <textarea id="note" placeholder="例：可能であれば代替発送をお願いします"></textarea>
+
+    <button type="button" onclick="createMail()">📧 メール作成</button>
+    <small>※クリックするとGmailが開きます。写真は添付して送信してください。</small>
+  </form>
+
+  <script>
+    function createMail() {
+      const applicant = document.getElementById('applicant').value.trim();
+      const vendor = document.getElementById('vendor').value.trim();
+      const orderNo = document.getElementById('orderNo').value.trim();
+      const defect = document.getElementById('defect').value.trim();
+      const note = document.getElementById('note').value.trim();
+
+      if (!vendor || !orderNo || !defect || !applicant) {
+        alert("全ての必須項目を入力してください。");
+        return;
       }
+
+      const subject = `【代替花申請】${vendor}／受注番号${orderNo}`;
+      const body =
+`■申請者名：${applicant}
+■取引先名：${vendor}
+■受注番号：${orderNo}
+■不良の状況：${defect}
+■申し送り事項：${note}`;
+
+      const mailto = `mailto:ko-umeda@halmek.co.jp?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.location.href = mailto;
     }
+  </script>
 
-    // --- 新規行登録 ---
-    const newRow = [
-      "未対応", dateStr, applicant, orderNo, vendor,
-      defect, note,
-      fileUrls[0] || "", fileUrls[1] || "", fileUrls[2] || "", fileUrls[3] || "", fileUrls[4] || "",
-      from
-    ];
-    sheet.getRange(insertRow, 1, 1, newRow.length).setValues([newRow]);
-    Logger.log(`✅ 新規追加: ${orderNo}（申請者: ${applicant}）`);
-
-    // --- Gmailラベル処理 ---
-    const statusLabel = getOrCreateLabel(`${MAIN_LABEL}/未対応`);
-    thread.addLabel(baseLabel);
-    thread.addLabel(statusLabel);
-    thread.moveToArchive();
-  });
-
-  Logger.log("🎉 全スレッド処理完了");
-}
-
-/**
- * ステータス変更検知（onEdit）
- */
-function onEdit(e) {
-  const sheet = e.source.getActiveSheet();
-  if (sheet.getName() !== SHEET_MAIN) return;
-  const row = e.range.getRow();
-  const col = e.range.getColumn();
-  if (col !== 1 || row === 1) return;
-
-  const status = e.value;
-  const from = sheet.getRange(row, 13).getValue();
-  if (!from) return;
-
-  updateGmailLabel(from, status);
-  sendStatusMail(row, status);
-}
-
-/**
- * Gmailラベル更新
- */
-function updateGmailLabel(from, status) {
-  const threads = GmailApp.search(`from:${from} subject:代替花申請`);
-  const baseLabel = getOrCreateLabel(MAIN_LABEL);
-  const newLabel = getOrCreateLabel(`${MAIN_LABEL}/${status}`);
-
-  threads.forEach(thread => {
-    thread.getLabels().forEach(label => {
-      if (label.getName().startsWith(`${MAIN_LABEL}/`)) {
-        thread.removeLabel(label);
-      }
-    });
-    thread.addLabel(baseLabel);
-    thread.addLabel(newLabel);
-  });
-}
-
-/**
- * ステータス変更 通知メール
- */
-function sendStatusMail(row, status) {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName(SHEET_MAIN);
-  const mailSheet = ss.getSheetByName(SHEET_MAIL);
-
-  const subjectTemplate = mailSheet.getRange("A8").getValue();
-  const bodyTemplate = mailSheet.getRange("A11").getValue();
-  const senders = mailSheet.getRange("B2:B6").getValues().flat().filter(Boolean);
-
-  const values = sheet.getRange(row, 1, 1, 13).getValues()[0];
-  const headers = sheet.getRange(1, 1, 1, 13).getValues()[0];
-  const recipient = values[12];
-
-  // 日付フォーマットを整える
-  const formattedValues = [...values];
-  const dateIndex = headers.indexOf("申請日");
-  if (dateIndex !== -1 && values[dateIndex]) {
-    const rawDate = new Date(values[dateIndex]);
-    formattedValues[dateIndex] = Utilities.formatDate(rawDate, Session.getScriptTimeZone(), "yyyy/MM/dd HH:mm");
-  }
-
-  // 差し込み置換
-  let subject = subjectTemplate;
-  let body = bodyTemplate;
-  headers.forEach((h, i) => {
-    const key = `{{${h}}}`;
-    const val = formattedValues[i] || "";
-    subject = subject.replaceAll(key, val);
-    body = body.replaceAll(key, val);
-  });
-
-  const sender = senders[Math.floor(Math.random() * senders.length)];
-  GmailApp.sendEmail(recipient, subject, body, {
-    name: "代替花管理システム",
-    from: sender
-  });
-
-  Logger.log(`📤 通知送信完了: ${recipient}（${status}）`);
-}
-
-/**
- * 本文抽出
- */
-function getValue(body, key) {
-  const regex = new RegExp(`${key}(.*)`);
-  const match = body.match(regex);
-  return match ? match[1].trim() : "";
-}
-
-/**
- * Gmailラベル取得/作成
- */
-function getOrCreateLabel(name) {
-  const label = GmailApp.getUserLabelByName(name);
-  return label || GmailApp.createLabel(name);
-}
+</body>
+</html>
