@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <title>代替花申請フォーム</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<script>
+  (function() {
+    // 🔹 あなたのEmailJS公開キー
+    emailjs.init("gjzoajs");
+  })();
+</script>
 <style>
 body {
   font-family: "Noto Sans JP", sans-serif;
@@ -15,7 +22,7 @@ form {
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  max-width: 480px;
+  max-width: 500px;
   margin: 0 auto;
 }
 label { display: block; margin-top: 10px; font-weight: bold; }
@@ -32,89 +39,73 @@ button {
 }
 button:hover { background: #1976D2; }
 .file-group {
-  margin-top: 10px;
-  border: 1px dashed #ccc;
-  border-radius: 8px;
-  padding: 10px;
-  text-align: center;
-  background: #fafafa;
+  margin-top: 10px; border: 1px dashed #ccc; border-radius: 8px;
+  padding: 10px; text-align: center; background: #fafafa;
 }
-.file-name {
-  font-size: 13px;
-  color: #333;
-  margin-top: 5px;
-}
+.file-name { font-size: 13px; color: #333; margin-top: 5px; }
 .hidden { display: none; }
+#msg { text-align: center; margin-top: 15px; font-weight: bold; }
 </style>
 </head>
 <body>
   <h2>代替花申請フォーム</h2>
-  <form action="https://formspree.io/f/xblpnrlo" method="POST" enctype="multipart/form-data">
+  <form id="form">
     <label>申請者名</label>
-    <input type="text" name="申請者名" required>
+    <input type="text" id="name" required>
 
     <label>受注番号</label>
-    <input type="text" name="受注番号" required>
+    <input type="text" id="orderNo" required>
 
     <label>取引先名</label>
-    <input type="text" name="取引先名" required>
+    <input type="text" id="vendor" required>
 
     <label>不良の状況</label>
-    <textarea name="不良の状況" required></textarea>
+    <textarea id="defectDetail" required></textarea>
 
     <label>申し送り事項</label>
-    <textarea name="申し送り事項"></textarea>
+    <textarea id="note"></textarea>
 
     <label>画像添付（最大5枚）</label>
     <div id="fileContainer">
       <div class="file-group" id="fileGroup1">
-        <span>画像1を選択</span><br>
-        <input type="file" name="file1" id="file1" accept="image/*">
+        <input type="file" id="file1" accept="image/*">
         <div class="file-name" id="fileName1">未選択</div>
       </div>
       <div class="file-group hidden" id="fileGroup2">
-        <span>画像2を選択</span><br>
-        <input type="file" name="file2" id="file2" accept="image/*">
+        <input type="file" id="file2" accept="image/*">
         <div class="file-name" id="fileName2">未選択</div>
       </div>
       <div class="file-group hidden" id="fileGroup3">
-        <span>画像3を選択</span><br>
-        <input type="file" name="file3" id="file3" accept="image/*">
+        <input type="file" id="file3" accept="image/*">
         <div class="file-name" id="fileName3">未選択</div>
       </div>
       <div class="file-group hidden" id="fileGroup4">
-        <span>画像4を選択</span><br>
-        <input type="file" name="file4" id="file4" accept="image/*">
+        <input type="file" id="file4" accept="image/*">
         <div class="file-name" id="fileName4">未選択</div>
       </div>
       <div class="file-group hidden" id="fileGroup5">
-        <span>画像5を選択</span><br>
-        <input type="file" name="file5" id="file5" accept="image/*">
+        <input type="file" id="file5" accept="image/*">
         <div class="file-name" id="fileName5">未選択</div>
       </div>
     </div>
 
-    <button type="submit" id="submitBtn">送信</button>
-
-    <input type="hidden" name="_subject" value="【代替花申請】{{申請者名}}-受注番号{{受注番号}}">
-    <input type="hidden" name="_next" value="https://yourdomain.com/thankyou.html">
+    <button type="submit">送信</button>
+    <p id="msg"></p>
   </form>
 
 <script>
-// ✅ DOMが完全に読み込まれてからスクリプトを実行
 document.addEventListener("DOMContentLoaded", () => {
+  // ファイル選択の連動表示
   for (let i = 1; i <= 5; i++) {
     const input = document.getElementById(`file${i}`);
-    const nameLabel = document.getElementById(`fileName${i}`);
-    const nextGroup = document.getElementById(`fileGroup${i + 1}`);
-
-    input.addEventListener('change', function() {
-      if (this.files.length > 0) {
-        nameLabel.textContent = this.files[0].name;
-        if (nextGroup) nextGroup.classList.remove('hidden'); // 次のアップボタンを出す
+    const label = document.getElementById(`fileName${i}`);
+    const next = document.getElementById(`fileGroup${i + 1}`);
+    input.addEventListener('change', () => {
+      if (input.files.length > 0) {
+        label.textContent = input.files[0].name;
+        if (next) next.classList.remove('hidden');
       } else {
-        nameLabel.textContent = '未選択';
-        // 以降のグループを非表示に戻す
+        label.textContent = '未選択';
         for (let j = i + 1; j <= 5; j++) {
           document.getElementById(`fileGroup${j}`).classList.add('hidden');
           document.getElementById(`fileName${j}`).textContent = '未選択';
@@ -123,6 +114,43 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  document.getElementById("form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById("msg");
+    msg.textContent = "送信中...";
+
+    const formData = {
+      name: document.getElementById("name").value,
+      orderNo: document.getElementById("orderNo").value,
+      vendor: document.getElementById("vendor").value,
+      defectDetail: document.getElementById("defectDetail").value,
+      note: document.getElementById("note").value
+    };
+
+    const attachments = [];
+    for (let i = 1; i <= 5; i++) {
+      const f = document.getElementById(`file${i}`).files[0];
+      if (f) attachments.push(f);
+    }
+
+    try {
+      await emailjs.send("service_rnifgpa", "template_gjzoajs", formData, {
+        publicKey: "gjzoajs",
+        attachments: attachments
+      });
+      msg.textContent = "送信が完了しました！";
+      e.target.reset();
+      // ファイル欄リセット
+      for (let i = 2; i <= 5; i++) {
+        document.getElementById(`fileGroup${i}`).classList.add('hidden');
+        document.getElementById(`fileName${i}`).textContent = '未選択';
+      }
+    } catch (error) {
+      console.error(error);
+      msg.textContent = "送信に失敗しました。";
+    }
+  });
 });
 </script>
 </body>
