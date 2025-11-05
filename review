@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>代替花申請 一覧</title>
+  <style>
+    body {
+      font-family: "Hiragino Sans", sans-serif;
+      margin: 40px;
+      background-color: #f8f9fa;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    #searchBox {
+      display: block;
+      margin: 20px auto;
+      padding: 10px;
+      width: 60%;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+      padding: 10px;
+    }
+    th {
+      background-color: #007bff;
+      color: white;
+    }
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+    .pagination {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .pagination button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      margin: 0 4px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .pagination button:disabled {
+      background-color: #aaa;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>代替花申請 一覧</h1>
+  <input type="text" id="searchBox" placeholder="キーワードで検索（申請者名・取引先名など）..." onkeyup="filterData()">
+
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>ステータス</th>
+        <th>申請日</th>
+        <th>申請者</th>
+        <th>受注番号</th>
+        <th>取引先名</th>
+        <th>不良の状況</th>
+        <th>申し送り事項</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+
+  <div class="pagination" id="pagination"></div>
+
+  <script>
+    const SHEET_ID = '1DMH4w1eA_CxSYCVhCjJyewweuMat2xsR3LRVp1doFNY'; // あなたのスプレッドシートID
+    const SHEET_NAME = '進捗一覧';
+    const ITEMS_PER_PAGE = 10;
+
+    let allData = [];
+    let filteredData = [];
+    let currentPage = 1;
+
+    async function fetchData() {
+      const url = `https://opensheet.elk.sh/${SHEET_ID}/${SHEET_NAME}`;
+      const res = await fetch(url);
+      const data = await res.json();
+
+      // 空行除外 + 並び替え（申請日が新しい順）
+      allData = data.filter(row => row['申請日']).sort((a, b) => new Date(b['申請日']) - new Date(a['申請日']));
+      filteredData = allData;
+      renderTable();
+    }
+
+    function renderTable() {
+      const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+      const endIndex = startIndex + ITEMS_PER_PAGE;
+      const displayData = filteredData.slice(startIndex, endIndex);
+
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+
+      displayData.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${row['ステータス'] || ''}</td>
+          <td>${row['申請日'] || ''}</td>
+          <td>${row['申請者'] || ''}</td>
+          <td>${row['受注番号'] || ''}</td>
+          <td>${row['取引先名'] || ''}</td>
+          <td>${row['不良の状況'] || ''}</td>
+          <td>${row['申し送り事項'] || ''}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      renderPagination();
+    }
+
+    function renderPagination() {
+      const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+      const pagination = document.getElementById('pagination');
+      pagination.innerHTML = '';
+
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.textContent = i;
+        btn.disabled = i === currentPage;
+        btn.onclick = () => {
+          currentPage = i;
+          renderTable();
+        };
+        pagination.appendChild(btn);
+      }
+    }
+
+    function filterData() {
+      const keyword = document.getElementById('searchBox').value.toLowerCase();
+      filteredData = allData.filter(row => {
+        return Object.values(row).some(value =>
+          String(value).toLowerCase().includes(keyword)
+        );
+      });
+      currentPage = 1;
+      renderTable();
+    }
+
+    fetchData();
+  </script>
+</body>
+</html>
