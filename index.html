@@ -25,7 +25,17 @@ button {
   border-radius: 6px; padding: 10px; margin-top: 16px;
 }
 button:hover { background: #1976D2; }
-#msg { margin-top: 16px; font-weight: bold; }
+#progress-container {
+  margin-top: 16px; background: #eee; border-radius: 6px; height: 20px; width: 100%;
+  overflow: hidden;
+}
+#progress-bar {
+  height: 100%; width: 0%; background: #4caf50; text-align: center;
+  color: white; font-size: 12px; transition: width 0.2s ease;
+}
+#msg {
+  margin-top: 16px; font-weight: bold; text-align: center;
+}
 </style>
 </head>
 <body>
@@ -42,20 +52,64 @@ button:hover { background: #1976D2; }
     <input type="file" name="file5" accept="image/*">
 
     <button type="submit">アップロード</button>
+
+    <div id="progress-container">
+      <div id="progress-bar">0%</div>
+    </div>
   </form>
 
   <p id="msg"></p>
 
   <script>
-  const SCRIPT_URL = 'https://script.google.com/a/macros/halmek.co.jp/s/AKfycbz-60jUGlYEhpUJsuV3SrTF9JnVn26Gd-RBUTtPhnhBPBz7zZ5ub4dyoRmCKHxz_X3V/exec'; // ← デプロイ後のURLを貼る
+  const SCRIPT_URL = 'https://script.google.com/a/macros/halmek.co.jp/s/AKfycbz-60jUGlYEhpUJsuV3SrTF9JnVn26Gd-RBUTtPhnhBPBz7zZ5ub4dyoRmCKHxz_X3V/exec'; // ← GAS デプロイURLを貼る
 
-  document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  document.getElementById('uploadForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    const formData = new FormData(e.target);
-    const res = await fetch(SCRIPT_URL, { method: 'POST', body: formData });
-    const json = await res.json();
-    document.getElementById('msg').textContent = json.message;
-    if (json.status === 'success') e.target.reset();
+
+    const form = e.target;
+    const formData = new FormData(form);
+    const xhr = new XMLHttpRequest();
+
+    const progressBar = document.getElementById('progress-bar');
+    const msg = document.getElementById('msg');
+    msg.textContent = '';
+    progressBar.style.width = '0%';
+    progressBar.textContent = '0%';
+
+    xhr.upload.onprogress = function(event) {
+      if (event.lengthComputable) {
+        const percent = Math.round((event.loaded / event.total) * 100);
+        progressBar.style.width = percent + '%';
+        progressBar.textContent = percent + '%';
+      }
+    };
+
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        const result = JSON.parse(xhr.responseText);
+        if (result.status === 'success') {
+          progressBar.style.width = '100%';
+          progressBar.textContent = '100%';
+          msg.style.color = 'green';
+          msg.textContent = '✅ アップロードが完了しました。';
+          form.reset();
+        } else {
+          msg.style.color = 'red';
+          msg.textContent = '⚠ エラー: ' + result.message;
+        }
+      } else {
+        msg.style.color = 'red';
+        msg.textContent = '⚠ 通信エラーが発生しました。';
+      }
+    };
+
+    xhr.onerror = function() {
+      msg.style.color = 'red';
+      msg.textContent = '⚠ ネットワークエラーが発生しました。';
+    };
+
+    xhr.open('POST', SCRIPT_URL);
+    xhr.send(formData);
   });
   </script>
 </body>
