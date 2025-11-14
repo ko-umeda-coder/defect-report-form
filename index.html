@@ -108,14 +108,16 @@
 ■不良の状況：${defect}
 ■申し送り事項：${note}`;
 
-    // ★ Gmail を強制的に開く URL（Outlook は一切使わない）
+    // ★ PC / スマホ両対応：ブラウザ版 Gmail を強制表示
+    // （Gmailアプリではなく Web版の Gmail を開く）
     const gmailURL =
-      "https://mail.google.com/mail/?view=cm&fs=1" +
+      "https://mail.google.com/mail/u/0/?ui=2&view=cm&fs=1&tf=1" +
       "&to=ko-umeda@halmek.co.jp" +
       "&su=" + encodeURIComponent(subject) +
       "&body=" + encodeURIComponent(body);
 
-    window.open(gmailURL, "_blank"); // Gmail を新規タブで開く
+    // 画面遷移
+    window.location.href = gmailURL;
   }
 </script>
 
@@ -123,6 +125,7 @@
 
 </body>
 </html>
+
 
 
 
