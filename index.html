@@ -108,18 +108,21 @@
 ■不良の状況：${defect}
 ■申し送り事項：${note}`;
 
-    // ★ Gmail を強制的に開く URL
-    const gmailURL = `https://mail.google.com/mail/?view=cm&fs=1` +
-                     `&to=ko-umeda@halmek.co.jp` +
-                     `&su=${encodeURIComponent(subject)}` +
-                     `&body=${encodeURIComponent(body)}`;
+    // ★ Gmail を強制的に開く URL（Outlook は一切使わない）
+    const gmailURL =
+      "https://mail.google.com/mail/?view=cm&fs=1" +
+      "&to=ko-umeda@halmek.co.jp" +
+      "&su=" + encodeURIComponent(subject) +
+      "&body=" + encodeURIComponent(body);
 
-    window.open(gmailURL, "_blank");  // 別タブで Gmail を開く
+    window.open(gmailURL, "_blank"); // Gmail を新規タブで開く
   }
 </script>
 
 
+
 </body>
 </html>
+
 
 
