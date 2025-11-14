@@ -145,15 +145,17 @@
 ■申し送り事項：${note}`;
 
       // 📱 スマホでも見やすい Gmail mobile UI を使用
-      const gmailURL =
-        "https://mail.google.com/mail/mu/mp/546/#co" +
-        "?to=ko-umeda@halmek.co.jp" +
-        "&su=" + encodeURIComponent(subject) +
-        "&body=" + encodeURIComponent(body);
+const gmailURL =
+  "https://mail.google.com/mail/u/0/?ui=2&view=cm&fs=1&tf=1" +
+  "&to=ko-umeda@halmek.co.jp" +
+  "&su=" + encodeURIComponent(subject) +
+  "&body=" + encodeURIComponent(body);
 
-      window.location.href = gmailURL;
+window.location.href = gmailURL;
+
     }
   </script>
 
 </body>
 </html>
+
