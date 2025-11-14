@@ -3,63 +3,99 @@
 <head>
   <meta charset="UTF-8" />
   <title>代替花申請フォーム</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
     body {
       font-family: "Segoe UI", "Hiragino Sans", sans-serif;
       background-color: #f8f9fa;
-      padding: 40px;
+      padding: 20px;
+      margin: 0;
     }
+
     h1 {
       color: #444;
-      font-size: 1.5em;
+      font-size: 1.4em;
       text-align: center;
+      margin-bottom: 20px;
     }
+
     form {
       max-width: 600px;
       margin: 0 auto;
       background: #fff;
       border-radius: 12px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      padding: 30px 40px;
+      padding: 20px 25px;
     }
+
     label {
       display: block;
-      margin-top: 16px;
+      margin-top: 18px;
       font-weight: bold;
+      font-size: 14px;
     }
+
     input, textarea {
       width: 100%;
-      padding: 10px;
-      font-size: 14px;
+      padding: 12px;
+      font-size: 16px;   /* ← スマホで大きくて入力しやすい */
       border: 1px solid #ccc;
       border-radius: 6px;
-      margin-top: 6px;
+      margin-top: 8px;
       box-sizing: border-box;
     }
+
     textarea {
       resize: vertical;
-      height: 80px;
+      min-height: 90px;
     }
+
     button {
       display: block;
       width: 100%;
       margin-top: 30px;
-      padding: 12px;
+      padding: 14px;
       background-color: #007bff;
       border: none;
       color: white;
-      font-size: 16px;
-      border-radius: 8px;
+      font-size: 17px;
+      border-radius: 10px;
       cursor: pointer;
     }
+
     button:hover {
       background-color: #0056b3;
     }
+
     small {
       display: block;
-      margin-top: 8px;
+      margin-top: 10px;
       color: #777;
       font-size: 12px;
+      text-align: center;
+    }
+
+    /* スマホ特化（幅480px以下） */
+    @media (max-width: 480px) {
+      form {
+        padding: 18px;
+      }
+
+      h1 {
+        font-size: 1.25em;
+      }
+
+      input, textarea {
+        font-size: 16px;
+        padding: 14px;
+      }
+
+      button {
+        font-size: 18px;
+        padding: 15px;
+      }
     }
   </style>
 </head>
@@ -84,48 +120,40 @@
     <textarea id="note" placeholder="例：可能であれば代替発送をお願いします"></textarea>
 
     <button type="button" onclick="createMail()">📧 メール作成</button>
-    <small>※クリックするとGmailが開きます。写真は添付して送信してください。</small>
+    <small>※Gmailが開きます。写真は添付して送信してください。</small>
   </form>
 
-<script>
-  function createMail() {
-    const applicant = document.getElementById('applicant').value.trim();
-    const vendor = document.getElementById('vendor').value.trim();
-    const orderNo = document.getElementById('orderNo').value.trim();
-    const defect = document.getElementById('defect').value.trim();
-    const note = document.getElementById('note').value.trim();
+  <script>
+    function createMail() {
+      const applicant = document.getElementById('applicant').value.trim();
+      const vendor = document.getElementById('vendor').value.trim();
+      const orderNo = document.getElementById('orderNo').value.trim();
+      const defect = document.getElementById('defect').value.trim();
+      const note = document.getElementById('note').value.trim();
 
-    if (!vendor || !orderNo || !defect || !applicant) {
-      alert("全ての必須項目を入力してください。");
-      return;
-    }
+      if (!vendor || !orderNo || !defect || !applicant) {
+        alert("全ての必須項目を入力してください。");
+        return;
+      }
 
-    const subject = `【代替花申請】${vendor}／受注番号${orderNo}`;
-    const body =
+      const subject = `【代替花申請】${vendor}／受注番号${orderNo}`;
+      const body =
 `■申請者名：${applicant}
 ■取引先名：${vendor}
 ■受注番号：${orderNo}
 ■不良の状況：${defect}
 ■申し送り事項：${note}`;
 
-    // ★ PC / スマホ両対応：ブラウザ版 Gmail を強制表示
-    // （Gmailアプリではなく Web版の Gmail を開く）
-    const gmailURL =
-      "https://mail.google.com/mail/u/0/?ui=2&view=cm&fs=1&tf=1" +
-      "&to=ko-umeda@halmek.co.jp" +
-      "&su=" + encodeURIComponent(subject) +
-      "&body=" + encodeURIComponent(body);
+      // 📱 スマホでも見やすい Gmail mobile UI を使用
+      const gmailURL =
+        "https://mail.google.com/mail/mu/mp/546/#co" +
+        "?to=ko-umeda@halmek.co.jp" +
+        "&su=" + encodeURIComponent(subject) +
+        "&body=" + encodeURIComponent(body);
 
-    // 画面遷移
-    window.location.href = gmailURL;
-  }
-</script>
-
-
+      window.location.href = gmailURL;
+    }
+  </script>
 
 </body>
 </html>
-
-
-
-
