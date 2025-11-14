@@ -87,32 +87,39 @@
     <small>※クリックするとGmailが開きます。写真は添付して送信してください。</small>
   </form>
 
-  <script>
-    function createMail() {
-      const applicant = document.getElementById('applicant').value.trim();
-      const vendor = document.getElementById('vendor').value.trim();
-      const orderNo = document.getElementById('orderNo').value.trim();
-      const defect = document.getElementById('defect').value.trim();
-      const note = document.getElementById('note').value.trim();
+<script>
+  function createMail() {
+    const applicant = document.getElementById('applicant').value.trim();
+    const vendor = document.getElementById('vendor').value.trim();
+    const orderNo = document.getElementById('orderNo').value.trim();
+    const defect = document.getElementById('defect').value.trim();
+    const note = document.getElementById('note').value.trim();
 
-      if (!vendor || !orderNo || !defect || !applicant) {
-        alert("全ての必須項目を入力してください。");
-        return;
-      }
+    if (!vendor || !orderNo || !defect || !applicant) {
+      alert("全ての必須項目を入力してください。");
+      return;
+    }
 
-      const subject = `【代替花申請】${vendor}／受注番号${orderNo}`;
-      const body =
+    const subject = `【代替花申請】${vendor}／受注番号${orderNo}`;
+    const body =
 `■申請者名：${applicant}
 ■取引先名：${vendor}
 ■受注番号：${orderNo}
 ■不良の状況：${defect}
 ■申し送り事項：${note}`;
 
-      const mailto = `mailto:ko-umeda@halmek.co.jp?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-      window.location.href = mailto;
-    }
-  </script>
+    // ★ Gmail を強制的に開く URL
+    const gmailURL = `https://mail.google.com/mail/?view=cm&fs=1` +
+                     `&to=ko-umeda@halmek.co.jp` +
+                     `&su=${encodeURIComponent(subject)}` +
+                     `&body=${encodeURIComponent(body)}`;
+
+    window.open(gmailURL, "_blank");  // 別タブで Gmail を開く
+  }
+</script>
+
 
 </body>
 </html>
+
 
