@@ -1,161 +1,92 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>代替花申請フォーム</title>
-
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <style>
-    body {
-      font-family: "Segoe UI", "Hiragino Sans", sans-serif;
-      background-color: #f8f9fa;
-      padding: 20px;
-      margin: 0;
-    }
-
-    h1 {
-      color: #444;
-      font-size: 1.4em;
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    form {
-      max-width: 600px;
-      margin: 0 auto;
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      padding: 20px 25px;
-    }
-
-    label {
-      display: block;
-      margin-top: 18px;
-      font-weight: bold;
-      font-size: 14px;
-    }
-
-    input, textarea {
-      width: 100%;
-      padding: 12px;
-      font-size: 16px;   /* ← スマホで大きくて入力しやすい */
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      margin-top: 8px;
-      box-sizing: border-box;
-    }
-
-    textarea {
-      resize: vertical;
-      min-height: 90px;
-    }
-
-    button {
-      display: block;
-      width: 100%;
-      margin-top: 30px;
-      padding: 14px;
-      background-color: #007bff;
-      border: none;
-      color: white;
-      font-size: 17px;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    small {
-      display: block;
-      margin-top: 10px;
-      color: #777;
-      font-size: 12px;
-      text-align: center;
-    }
-
-    /* スマホ特化（幅480px以下） */
-    @media (max-width: 480px) {
-      form {
-        padding: 18px;
-      }
-
-      h1 {
-        font-size: 1.25em;
-      }
-
-      input, textarea {
-        font-size: 16px;
-        padding: 14px;
-      }
-
-      button {
-        font-size: 18px;
-        padding: 15px;
-      }
-    }
+    body { font-family: "Segoe UI","Hiragino Sans",sans-serif; background:#f8f9fa; padding:20px; margin:0; }
+    h1 { text-align:center; color:#444; font-size:1.4em; margin-bottom:20px; }
+    form { max-width:600px; margin:0 auto; background:#fff; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.1); padding:20px 25px; }
+    label { display:block; margin-top:18px; font-weight:bold; font-size:14px; }
+    input,textarea { width:100%; padding:12px; font-size:16px; border:1px solid #ccc; border-radius:6px; margin-top:8px; box-sizing:border-box; }
+    textarea { resize:vertical; min-height:90px; }
+    button { display:block; width:100%; margin-top:30px; padding:14px; background:#007bff; color:#fff; border:none; font-size:17px; border-radius:10px; cursor:pointer; }
+    button:hover { background:#0056b3; }
+    small { display:block; margin-top:10px; color:#777; font-size:12px; text-align:center; }
+    @media(max-width:480px){ form{padding:18px;} h1{font-size:1.25em;} input,textarea{font-size:16px;padding:14px;} button{font-size:18px;padding:15px;} }
   </style>
 </head>
 <body>
 
-  <h1>代替花申請フォーム</h1>
+<h1>代替花申請フォーム</h1>
 
-  <form id="defectForm">
-    <label>申請者名</label>
-    <input type="text" id="applicant" placeholder="例：梅田耕平" required />
+<form id="defectForm">
+  <label>申請者名</label>
+  <input type="text" id="applicant" required />
 
-    <label>取引先名</label>
-    <input type="text" id="vendor" placeholder="例：アーカンジェル新大阪" required />
+  <label>取引先名</label>
+  <input type="text" id="vendor" required />
 
-    <label>受注番号</label>
-    <input type="text" id="orderNo" placeholder="例：67890" required />
+  <label>受注番号</label>
+  <input type="text" id="orderNo" required />
 
-    <label>不良の状況（花材の種類・色・輪数・その他備考）</label>
-    <textarea id="defect" placeholder="例：バラ・赤色・5輪など" required></textarea>
+  <label>不良の状況</label>
+  <textarea id="defect" required></textarea>
 
-    <label>申し送り事項</label>
-    <textarea id="note" placeholder="例：可能であれば代替発送をお願いします"></textarea>
+  <label>申し送り事項</label>
+  <textarea id="note"></textarea>
 
-    <button type="button" onclick="createMail()">📧 メール作成</button>
-    <small>※Gmailが開きます。写真は添付して送信してください。</small>
-  </form>
+  <button type="button" onclick="createMail()">📧 メール作成</button>
+  <small>※Gmailが開きます。写真は添付して送信してください。</small>
+</form>
 
-  <script>
-    function createMail() {
-      const applicant = document.getElementById('applicant').value.trim();
-      const vendor = document.getElementById('vendor').value.trim();
-      const orderNo = document.getElementById('orderNo').value.trim();
-      const defect = document.getElementById('defect').value.trim();
-      const note = document.getElementById('note').value.trim();
+<script>
+async function createMail() {
+  const url = "https://raw.githubusercontent.com/<username>/<repo>/main/config/mail-settings.json?ts=" + Date.now();
+  
+  let settings;
+  try {
+    settings = await fetch(url).then(r => r.json());
+  } catch(e) {
+    alert("メール設定 JSON が取得できませんでした。");
+    return;
+  }
 
-      if (!vendor || !orderNo || !defect || !applicant) {
-        alert("全ての必須項目を入力してください。");
-        return;
-      }
+  const emails = settings.mailRecipients || [];
+  if (emails.length === 0) {
+    alert("メール設定がありません。");
+    return;
+  }
 
-      const subject = `【代替花申請】${vendor}／受注番号${orderNo}`;
-      const body =
+  const applicant = document.getElementById('applicant').value.trim();
+  const vendor = document.getElementById('vendor').value.trim();
+  const orderNo = document.getElementById('orderNo').value.trim();
+  const defect = document.getElementById('defect').value.trim();
+  const note = document.getElementById('note').value.trim();
+
+  if (!vendor || !orderNo || !defect || !applicant) {
+    alert("全ての必須項目を入力してください。");
+    return;
+  }
+
+  const subject = `【代替花申請】${vendor}／受注番号${orderNo}`;
+  const body =
 `■申請者名：${applicant}
 ■取引先名：${vendor}
 ■受注番号：${orderNo}
 ■不良の状況：${defect}
 ■申し送り事項：${note}`;
 
-      // 📱 スマホでも見やすい Gmail mobile UI を使用
-const gmailURL =
-  "https://mail.google.com/mail/u/0/?ui=2&view=cm&fs=1&tf=1" +
-  "&to=ko-umeda@halmek.co.jp" +
-  "&su=" + encodeURIComponent(subject) +
-  "&body=" + encodeURIComponent(body);
+  const gmailURL =
+    "https://mail.google.com/mail/u/0/?ui=2&view=cm&fs=1&tf=1" +
+    "&to=" + encodeURIComponent(emails.join(",")) +
+    "&su=" + encodeURIComponent(subject) +
+    "&body=" + encodeURIComponent(body);
 
-window.location.href = gmailURL;
-
-    }
-  </script>
+  window.location.href = gmailURL;
+}
+</script>
 
 </body>
 </html>
-
